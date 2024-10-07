@@ -1,4 +1,6 @@
-import functools
+from functools import reduce
+import hashlib as hl
+import json
 
 MINING_REWARD = 10
 genesis_block = {
@@ -44,6 +46,7 @@ def add_transaction(recipient, sender=owner, amount=1.0):
 def mine_block():
     last_block = blockchain[-1]
     hashed_block = hash_block(last_block)
+    print(hashed_block)
     reward_transaction = {
         'sender': 'MINING',
         'recipient': owner,
@@ -82,7 +85,7 @@ def print_blockchain_elements():
 
 
 def hash_block(block):
-    return '-'.join([str(block[key]) for key in block])
+    return hl.sha256(json.dumps((block)).encode()).hexdigest()
 
 def get_tx_amount(payload, participant):
     return [[tx['amount'] for tx in block['transactions'] if tx[payload] == participant] for block in blockchain]
@@ -92,9 +95,9 @@ def get_balance(participant):
     tx_recipient = get_tx_amount('recipient', participant)
     tx_open_from_sender = [tx['amount'] for tx in open_transactions if tx['sender'] == participant]
     tx_sender.append(tx_open_from_sender)
-    amount_sent = functools.reduce(lambda total, currentTx: total + currentTx[0] if len(currentTx) > 0 else 0, tx_sender, 0)
+    amount_sent = reduce(lambda total, currentTx: total + sum(currentTx) if len(currentTx) > 0 else total + 0, tx_sender, 0)
     # amount_sent = 0
-    amount_received = functools.reduce(lambda total, currentTx: total + currentTx[0] if len(currentTx) > 0 else 0, tx_recipient, 0)
+    amount_received = reduce(lambda total, currentTx: total + sum(currentTx) if len(currentTx) > 0 else total + 0, tx_recipient, 0)
     # amount_received = 0
 
     # for tx in tx_sender:
